@@ -172,30 +172,6 @@ body {
 .visit-device { font-weight: 600; }
 .visit-ip { color: #777; }
 .visit-ua { color: #999; font-size: 0.85em; }
-/* ── Landscape-by-default: prompt rotation in portrait on phones ── */
-#rotate-overlay { display: none; }
-@media (orientation: portrait) and (max-width: 920px) {
-  #rotate-overlay {
-    display: flex;
-    position: fixed; inset: 0; z-index: 500;
-    flex-direction: column; align-items: center; justify-content: center;
-    gap: 16px; text-align: center; padding: 24px;
-    background: linear-gradient(160deg, #0a0a2e 0%, #15163a 100%);
-    color: #fff;
-  }
-  /* keep the game from receiving input while rotated */
-  #hud, #cust-panel, #gesture-menu, #fridge-menu, #wardrobe-menu, #runner-ui, #match3-ui, #hole-ui, #cinema-ui, #helado-ui, #tienda-ui, #mob-ui, #galaga-ui, #tres-ui, #cuatro-ui { pointer-events: none; }
-}
-.rotate-icon {
-  font-size: 4.5rem;
-  animation: rotateHint 2.2s ease-in-out infinite;
-}
-@keyframes rotateHint {
-  0%, 100% { transform: rotate(-12deg); }
-  50%      { transform: rotate(78deg); }
-}
-.rotate-text { font-size: 1.5rem; font-weight: 800; letter-spacing: 1px; }
-.rotate-sub  { font-size: 0.95rem; opacity: 0.7; }
 
 /* ── Game chooser hub ── */
 #hub-screen {
@@ -260,9 +236,9 @@ body {
 #reset-btn:hover { background: rgba(220,50,50,0.30); transform: scale(1.04); }
 @media (max-height: 600px) { #reset-btn { top: 10px; left: 10px; padding: 6px 12px; font-size: 0.78rem; } }
 
-/* ── Mobile-landscape friendly menus (hub + character select) ── */
+/* ── Menús compactos en pantallas chicas ── */
 
-/* Landscape phones are short — compress everything to fit */
+/* Pantallas bajas — compress everything to fit */
 @media (max-height: 600px) {
   .select-title    { font-size: 1.8rem; margin-bottom: 0.2rem; letter-spacing: 1px; }
   .select-subtitle { font-size: 0.8rem; margin-bottom: 0.8rem; }
@@ -275,7 +251,7 @@ body {
   .corner-back     { top: 12px; left: 12px; padding: 6px 12px; font-size: 0.8rem; }
 }
 
-/* Very short screens (small phones in landscape) */
+/* Very short screens  */
 @media (max-height: 430px) {
   .select-title    { font-size: 1.4rem; }
   .select-subtitle { margin-bottom: 0.5rem; font-size: 0.72rem; }

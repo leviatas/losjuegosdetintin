@@ -20,8 +20,8 @@ let lastTime    = 0;
 let animFrameId = null;
 
 const isTouch = (window.matchMedia && matchMedia('(pointer: coarse)').matches) || ('ontouchstart' in window);
-function forceLandscape() {
-  const lock = () => { try { if (screen.orientation && screen.orientation.lock) screen.orientation.lock('landscape').catch(()=>{}); } catch (e) {} };
+function forcePortrait() {
+  const lock = () => { try { if (screen.orientation && screen.orientation.lock) screen.orientation.lock('portrait').catch(()=>{}); } catch (e) {} };
   const el = document.documentElement;
   const req = el.requestFullscreen || el.webkitRequestFullscreen || el.mozRequestFullScreen;
   try {
@@ -31,7 +31,7 @@ function forceLandscape() {
     } else lock();
   } catch (e) { lock(); }
 }
-if (isTouch) window.addEventListener('pointerdown', () => forceLandscape(), { once: true });
+if (isTouch) window.addEventListener('pointerdown', () => forcePortrait(), { once: true });
 
 // ── Hub ────────────────────────────────────────────────────────────────────
 function showHub() {
@@ -45,7 +45,7 @@ function showHub() {
 
 // ── Sky Run (Dash3D.js) — runner en 3D real (Three.js se importa recién al entrar) ─────────
 async function launchDash3D() {
-  if (isTouch) forceLandscape();
+  if (isTouch) forcePortrait();
   document.getElementById('hub-screen').classList.add('hidden');
   const ui = document.getElementById('dash3d-ui');
   ui.classList.remove('hidden');

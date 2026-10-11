@@ -1,7 +1,12 @@
 # CLAUDE.md — Guía del proyecto
 
-Juego web para chicos (canvas 2D, ES modules, sin framework) servido por un Express
+Juegos web para chicos (ES modules, sin framework) servidos por un Express
 dockerizado. Textos de UI en español rioplatense (voseo: "tocá", "juntá").
+
+**Todos los juegos son en vertical (portrait)**: no hay cartel de "girá el
+dispositivo"; al tocar se pide pantalla completa y se bloquea en `portrait`
+(`forcePortrait()` en game.js, `"orientation": "portrait"` en el manifest).
+Diseñar cada juego pensando primero en un celular parado.
 
 ## Flujo de deploy (obligatorio en cada cambio)
 
