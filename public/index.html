@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Los juegos de Tintin</title>
+  <link rel="stylesheet" href="/css/style.css"/>
+  <link rel="manifest" href="/manifest.json"/>
+  <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png"/>
+  <meta name="theme-color" content="#FF8AB0"/>
+  <meta name="mobile-web-app-capable" content="yes"/>
+  <meta name="apple-mobile-web-app-capable" content="yes"/>
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+  <meta name="apple-mobile-web-app-title" content="Los juegos de Tintin"/>
+</head>
+<body>
+
+  <!-- PWA install banner -->
+  <div id="install-banner" class="hidden">
+    <img src="/icons/icon-192.png" alt="Los juegos de Tintin" class="install-icon"/>
+    <div class="install-text">
+      <strong>Los juegos de Tintin</strong>
+      <span>Instalá la app para jugar sin internet</span>
+    </div>
+    <button id="install-btn">Instalar</button>
+    <button id="install-dismiss">✕</button>
+  </div>
+
+  <!-- Loading -->
+  <div id="loading">
+    Cargando<span class="loader-dot">.</span><span class="loader-dot">.</span><span class="loader-dot">.</span>
+  </div>
+
+  <!-- Rotate-to-landscape prompt (shown in portrait on phones) -->
+  <div id="rotate-overlay">
+    <div class="rotate-icon">📱</div>
+    <div class="rotate-text">Girá tu dispositivo</div>
+    <div class="rotate-sub">Este juego se ve mejor en horizontal</div>
+  </div>
+  <!-- Game chooser (main menu) -->
+  <div id="hub-screen">
+    <button id="reload-btn" title="Actualizar a la última versión">🔄 Actualizar</button>
+    <button id="reset-btn" title="Borrar todo el progreso y empezar de cero">🗑️ Resetear</button>
+    <h1 class="select-title">Los juegos de Tintin</h1>
+    <p class="select-subtitle">Elegí un juego</p>
+    <div class="hub-grid">
+      <button class="hub-card dash3d" id="uno-dash3d">
+        <div class="hub-emoji">☁️</div>
+        <div class="hub-name">Sky Run</div>
+        <div class="hub-desc">Corré entre las nubes en 3D: elegí a la nena, Labubu o el conejito</div>
+      </button>
+    </div>
+  </div>
+
+  <!-- Canvas inserted by JS -->
+  <canvas id="game-canvas"></canvas>
+
+  <!-- App version (bumped on every change) -->
+  <div id="app-version">v1.0.0</div>
+
+  <!-- Sky Run (Dash3D.js, Three.js): el canvas WebGL lo crea Dash3D.js -->
+  <div id="dash3d-ui" class="hidden">
+    <button id="dash3d-exit" class="game-menu-btn" title="Volver al menú de juegos">← Menú</button>
+    <div id="dash3d-hud">
+      <span id="dash3d-dist">0 m</span>
+      <span id="dash3d-coins">🪙 0</span>
+      <span id="dash3d-hearts">💖💖💖</span>
+    </div>
+    <div id="dash3d-toast"></div>
+    <div id="dash3d-msg" class="hidden"></div>
+    <button id="dash3d-left"  class="dash3d-btn" title="Izquierda">◀</button>
+    <button id="dash3d-right" class="dash3d-btn" title="Derecha">▶</button>
+    <button id="dash3d-jump"  class="dash3d-btn" title="Saltar">⬆</button>
+  </div>
+
+  <!-- Visits log overlay (password-protected, opened by tapping the version badge) -->
+  <div id="visits-overlay" class="hidden">
+    <div class="visits-panel">
+      <button id="visits-close">×</button>
+      <h2>Visitas</h2>
+      <div id="visits-list"></div>
+    </div>
+  </div>
+
+  <!-- Guardia de arranque: si la app no arranca, mostrar el motivo y un botón para reparar -->
+  <script>
+    (function () {
+      var shown = false;
+      function box() {
+        var l = document.getElementById('loading');
+        if (!l || l.classList.contains('hidden')) return null;
+        var b = document.getElementById('boot-error');
+        if (!b) {
+          l.style.flexDirection = 'column';
+          var row = document.createElement('div');   // "Cargando..." queda en una sola línea
+          while (l.firstChild) row.appendChild(l.firstChild);
+          l.appendChild(row);
+          l.style.zIndex = '100000';   // por encima del cartel de "girá el celular"
+          b = document.createElement('div');
+          b.id = 'boot-error';
+          b.innerHTML = '<div id="boot-error-text"></div>' +
+            '<button id="boot-fix">🔧 Reparar y recargar</button>';
+          l.appendChild(b);
+          document.getElementById('boot-fix').onclick = window.__bootRepair;
+        }
+        return b;
+      }
+      window.__bootFail = function (msg) {
+        var b = box();
+        if (!b) return;
+        var t = document.getElementById('boot-error-text');
+        t.textContent = (shown ? t.textContent + '\n' : '') + msg;
+        shown = true;
+      };
+      // Borra service worker + cachés (lo guardado para jugar sin internet) y recarga
+      window.__bootRepair = function () {
+        var jobs = [];
+        try { if (navigator.serviceWorker) jobs.push(navigator.serviceWorker.getRegistrations().then(function (rs) { return Promise.all(rs.map(function (r) { return r.unregister(); })); })); } catch (e) {}
+        try { if (window.caches) jobs.push(caches.keys().then(function (ks) { return Promise.all(ks.map(function (k) { return caches.delete(k); })); })); } catch (e) {}
+        Promise.all(jobs).catch(function () {}).then(function () { location.replace('/?r=' + Date.now()); });
+      };
+      window.addEventListener('error', function (e) {
+        if (e.target && e.target !== window) { if (e.target.tagName === 'SCRIPT') __bootFail('No se pudo descargar: ' + (e.target.src || 'script').split('/').slice(-2).join('/')); return; }
+        __bootFail('Error: ' + (e.message || '?') + (e.filename ? ' (' + e.filename.split('/').pop() + ':' + e.lineno + ')' : ''));
+      }, true);
+      window.addEventListener('unhandledrejection', function (e) {
+        var r = e.reason; __bootFail('Error: ' + ((r && r.message) || r));
+      });
+      setTimeout(function () { __bootFail('La app está tardando en arrancar.'); }, 12000);
+      if (!(HTMLScriptElement.supports && HTMLScriptElement.supports('importmap'))) __bootFail('Aviso: el navegador no soporta importmap (actualizalo).');
+    })();
+  </script>
+  <script type="importmap">
+    { "imports": { "three": "/three/build/three.module.js", "three/addons/": "/three/examples/jsm/" } }
+  </script>
+  <script type="module" src="/js/game.js" onerror="__bootFail('No se pudo descargar el juego (game.js)')"></script>
+  <script>
+    // Service Worker
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/sw.js');
+    }
+
+    // "Actualizar": wipe caches + service worker so the newest version loads.
+    const reloadBtn = document.getElementById('reload-btn');
+    if (reloadBtn) reloadBtn.addEventListener('click', async () => {
+      reloadBtn.disabled = true;
+      reloadBtn.textContent = 'Actualizando…';
+      try {
+        if ('serviceWorker' in navigator) {
+          const regs = await navigator.serviceWorker.getRegistrations();
+          await Promise.all(regs.map(r => r.unregister()));
+        }
+        if (window.caches) {
+          const keys = await caches.keys();
+          await Promise.all(keys.map(k => caches.delete(k)));
+        }
+      } catch (e) { /* ignore and reload anyway */ }
+      // cache-busting reload
+      location.replace(location.pathname + '?v=' + Date.now());
+    });
+    // PWA install banner
+    let _deferredPrompt = null;
+    const banner   = document.getElementById('install-banner');
+    const installBtn = document.getElementById('install-btn');
+    const dismissBtn = document.getElementById('install-dismiss');
+    window.addEventListener('beforeinstallprompt', e => {
+      e.preventDefault();
+      _deferredPrompt = e;
+      banner.classList.remove('hidden');
+    });
+    installBtn.addEventListener('click', async () => {
+      banner.classList.add('hidden');
+      if (!_deferredPrompt) return;
+      _deferredPrompt.prompt();
+      await _deferredPrompt.userChoice;
+      _deferredPrompt = null;
+    });
+    dismissBtn.addEventListener('click', () => banner.classList.add('hidden'));
+    window.addEventListener('appinstalled', () => banner.classList.add('hidden'));
+
+    // Visits log (password-protected, tap the version badge to open)
+    const visitsOverlay = document.getElementById('visits-overlay');
+    const visitsList     = document.getElementById('visits-list');
+    document.getElementById('app-version').addEventListener('click', async () => {
+      const password = window.prompt('Contraseña:');
+      if (password === null) return;
+      const res = await fetch('/api/visits', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password }),
+      });
+      if (!res.ok) {
+        alert('Contraseña incorrecta');
+        return;
+      }
+      const visits = await res.json();
+      visitsList.innerHTML = visits.length
+        ? visits.map(v => `
+            <div class="visit-row">
+              <span class="visit-date">${v.created_at}</span>
+              <span class="visit-device">${v.device}</span>
+              <span class="visit-ip">${v.ip}</span>
+              <span class="visit-ua">${v.user_agent}</span>
+            </div>`).join('')
+        : '<p>No hay visitas registradas.</p>';
+      visitsOverlay.classList.remove('hidden');
+    });
+    document.getElementById('visits-close').addEventListener('click', () => {
+      visitsOverlay.classList.add('hidden');
+    });
+
+    document.getElementById('reset-btn').addEventListener('click', () => {
+      if (!confirm('¿Borrar todo el progreso? Monedas, personaje y récords se perderán.')) return;
+      const keys = [
+        'wallet_coins', 'dash3d_hero', 'dash3d_diff',
+        'dash3d_best', 'dash3d_best_facil', 'dash3d_best_dificil',
+      ];
+      keys.forEach(k => localStorage.removeItem(k));
+      location.reload();
+    });
+  </script>
+</body>
+</html>
