@@ -24,7 +24,6 @@ const GRAV     = 40, JUMP_V = 14;  // salto ≈ 2.45 de alto, 0.7 s en el aire
 const PAD_V    = 20;               // trampolín: súper salto
 const SPEED0   = 14, SPEED_MAX = 27;
 const THEME_M  = 600;              // metros por escenario
-const HEARTS   = 3;
 const HERO_CY  = 0.8;              // altura del centro de giro del héroe
 const N_DECOR  = 26, DECOR_GAP = 7;
 const DECOR_SPAN = N_DECOR * DECOR_GAP;
@@ -45,10 +44,16 @@ const THEMES = [
 ];
 
 // Dificultad: multiplica la velocidad de carrera (Normal = la original)
+// Cada nivel suma dificultad sobre el anterior:
+//   mul   → velocidad · gap → tiempo entre filas de obstáculos (menos = más seguidas)
+//   lvl0  → arranca con filas "avanzadas" (más carriles tapados con gelatinas)
+//   hearts → vidas · star → chance de estrella-escudo por fila
 const DIFFICULTIES = [
-  { id: 'facil',   name: 'Fácil',   emoji: '🐢', mul: 0.5, bestKey: 'dash3d_best_facil' },
-  { id: 'normal',  name: 'Normal',  emoji: '🏃', mul: 1,   bestKey: 'dash3d_best' },
-  { id: 'dificil', name: 'Difícil', emoji: '🚀', mul: 2,   bestKey: 'dash3d_best_dificil' },
+  { id: 'facil',   name: 'Fácil',   emoji: '🐢', mul: 0.5, gap: 1,    lvl0: 0,   hearts: 3, star: 0.07, bestKey: 'dash3d_best_facil' },
+  { id: 'normal',  name: 'Normal',  emoji: '🏃', mul: 1,   gap: 1,    lvl0: 0,   hearts: 3, star: 0.07, bestKey: 'dash3d_best' },
+  { id: 'dificil', name: 'Difícil', emoji: '🚀', mul: 2,   gap: 1,    lvl0: 0,   hearts: 3, star: 0.07, bestKey: 'dash3d_best_dificil' },
+  { id: 'muy',     name: 'Muy Difícil',  emoji: '🔥', mul: 2.4, gap: 0.88, lvl0: 0.5, hearts: 2, star: 0.05, bestKey: 'dash3d_best_muy' },
+  { id: 'ultra',   name: 'Ultra Difícil', emoji: '💀', mul: 2.8, gap: 0.8,  lvl0: 1,   hearts: 1, star: 0.04, bestKey: 'dash3d_best_ultra' },
 ];
 const DIFF_BY_ID = Object.fromEntries(DIFFICULTIES.map(d => [d.id, d]));
 
@@ -944,7 +949,7 @@ export class Dash3D {
     this.hy = 0; this.vy = 0; this.onGround = true;
     this.flip = 0; this.flipDur = 0.7;
     this.coins = 0;
-    this.hearts = HEARTS;
+    this.hearts = this.diff.hearts;
     this.invuln = 0;
     this.shield = 0;
     this.squash = 0;
@@ -1047,17 +1052,17 @@ export class Dash3D {
   _ensureRows() {
     while (this.nextRow < this.dist + N_ROWS * TILE_L - 12) {
       this._makeRow(this.nextRow);
-      const gapT = rand(0.95, 1.55) - clamp(this.dist / 4000, 0, 0.25);
+      const gapT = (rand(0.95, 1.55) - clamp(this.dist / 4000, 0, 0.25)) * this.diff.gap;
       this.nextRow += Math.max(12, this.speed * gapT);
     }
   }
 
   _makeRow(d) {
-    const lvl = clamp(d / 1500, 0, 1);
+    const lvl = clamp(d / 1500 + this.diff.lvl0, 0, 1);
     const r = Math.random();
     const lanes = [0, 1, 2].sort(() => Math.random() - 0.5);
     const jumpable = () => (Math.random() < 0.55 ? 'cake' : 'cone');
-    if (r < 0.07 && d > 200) {             // estrella → escudo
+    if (r < this.diff.star && d > 200) {             // estrella → escudo
       this._spawn('star', lanes[0], d, 1.1);
       this._coinLine(lanes[1], d - 4, 4);
       return;
@@ -1478,7 +1483,7 @@ export class Dash3D {
     if (force || H.h !== this.hearts) {
       H.h = this.hearts;
       const e = $('dash3d-hearts');
-      if (e) e.textContent = '💖'.repeat(Math.max(0, this.hearts)) + '🤍'.repeat(HEARTS - Math.max(0, this.hearts));
+      if (e) e.textContent = '💖'.repeat(Math.max(0, this.hearts)) + '🤍'.repeat(Math.max(0, this.diff.hearts - Math.max(0, this.hearts)));
     }
   }
 
