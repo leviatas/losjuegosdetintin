@@ -43,9 +43,14 @@ Los layouts 2D se recalculan por frame proporcional a `canvas.width/height`
   con formas de Three.js (sin modelos externos) y expone `legs/arms/head/ears/eyes/hair`
   para la animación genérica de `_updateHero()` (lo que no tiene, queda vacío).
   ⚠️ `this.parts` son las partículas; las del héroe son `this.heroParts`.
-- Dificultad (`DIFFICULTIES`: Fácil ×0.5, Normal ×1, Difícil ×2) multiplica la
-  velocidad en `_speedAt()`; guardada en `dash3d_diff`, récord separado por
-  dificultad (`dash3d_best` = Normal, `dash3d_best_facil`, `dash3d_best_dificil`).
+- Dificultad (`DIFFICULTIES`, 5 niveles: Fácil ×0.5, Normal ×1, Difícil ×2,
+  Muy Difícil ×2.4, Ultra Difícil ×2.8). `mul` multiplica la velocidad en
+  `_speedAt()`; los dos extremos además suben otras perillas: `gap` (filas más
+  seguidas en `_ensureRows()`), `lvl0` (filas "avanzadas" desde el arranque en
+  `_makeRow()`), `hearts` (Muy = 2, Ultra = 1) y `star` (menos escudos). Cada
+  nivel tiene que ser más difícil que el anterior en todas las perillas.
+  Guardada en `dash3d_diff`, récord separado por dificultad (`dash3d_best` =
+  Normal, `dash3d_best_<id>` el resto; sumarlas al reset global de `index.html`).
   Cambiarla en la pantalla de inicio llama a `reset()` para regenerar la pista.
 - Swipes (`_initInput`): ⬅️➡️ carril, ⬆️ salto, toque corto = salto. Se encadenan
   sin levantar el dedo; seguir en la misma dirección sólo re-ancla (un swipe largo

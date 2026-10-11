@@ -329,6 +329,12 @@ body {
 #dash3d-msg .d3-char:active { transform: scale(0.95); }
 #dash3d-msg .d3-diffs .d3-char { flex-direction: row; gap: 5px; min-width: 0; padding: 5px 10px; }
 #dash3d-msg .d3-diffs .d3-char span { font-size: 1.15rem; }
+#dash3d-msg .d3-diffs { flex-wrap: wrap; gap: 6px; max-width: 340px; margin-left: auto; margin-right: auto; }
+/* los dos niveles extremos, en rojo para que se note que pican */
+#dash3d-msg .d3-diff[data-diff="muy"]   { color: #A0281E; border-color: rgba(230,90,40,0.45); }
+#dash3d-msg .d3-diff[data-diff="ultra"] { color: #fff; background: rgba(60,20,50,0.75); border-color: rgba(255,60,90,0.6); }
+#dash3d-msg .d3-diff[data-diff="muy"].on   { border-color: #E65A28; box-shadow: 0 6px 16px rgba(230,90,40,0.4); }
+#dash3d-msg .d3-diff[data-diff="ultra"].on { background: #3C1432; border-color: #FF3C5A; box-shadow: 0 6px 16px rgba(255,60,90,0.45); }
 .dash3d-btn {
   position: absolute; bottom: 20px; width: 76px; height: 76px; border-radius: 50%;
   font-size: 1.8rem; color: #fff; cursor: pointer; user-select: none;
