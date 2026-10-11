@@ -4,7 +4,7 @@
   "description": "Corré entre las nubes en Sky Run",
   "start_url": "/",
   "display": "standalone",
-  "orientation": "landscape",
+  "orientation": "portrait",
   "background_color": "#0a0a1a",
   "theme_color": "#FF8AB0",
   "icons": [
